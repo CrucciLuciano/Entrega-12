@@ -19,6 +19,10 @@ import initializePassport from "./config/passport.config.js";
 import initializePassportGitHub from "./config/passport-Github.config.js";
 import dotenv from "dotenv"
 import { mokingProducts } from "./routes/mokingProducts.router.js";
+import errorHandler from "./middlewares/error.js"
+import { generateRouteError } from "./services/errors/info.js";
+import CustomError from "./services/errors/custom_error.js";
+import EErrors from "./services/errors/enums.js";
 
 dotenv.config()
 
@@ -79,9 +83,16 @@ app.use("/mockingproducts", mokingProducts)
 
 //Atrapa todas las rutas que no existan
 app.get("*", (req, res) => {
-    return res.status(404).json({
-        status: "error",
-        msg: "Ruta no encontrada",
-        data: {}
+    CustomError.createError({
+        name: "Ruta invalida",
+        cause: generateRouteError(),
+        message: "Error Ruta no encontrada",
+        code: EErrors.ROUTING_ERROR
     })
+    // return res.status(404).json({
+    //     status: "error",
+    //     msg: "Ruta no encontrada",
+    //     data: {}
+    // })
 })
+app.use(errorHandler)

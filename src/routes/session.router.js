@@ -1,27 +1,40 @@
 import { Router } from "express";
-//import UserModel from "../dao/models/user.model.js"
-//import { createHash, isValidPassword } from "../utils.js";
+import { createHash, isValidPassword } from "../utils.js";
 import passport from "passport";
+import UserModel from "../dao/mongo/models/user.model.js";
+import CustomError from "../services/errors/custom_error.js";
+import { generateUserErrorInfo } from "../services/errors/info.js";
+import EErrors from "../services/errors/enums.js";
 
 const sessionRouter = Router()
 
-// sessionRouter.post("/singup", async (req, res) => {
-//     const user = req.body
-//     // const user = {
-//     //     first_name: req.body.first_name,
-//     //     last_name: req.body.last_name,
-//     //     age: req.body.age,
-//     //     email: req.body.email,
-//     //     password: createHash(req.body.password)
-//     // }
-//     user.password = createHash(req.body.password)
-//     await UserModel.create(user)
-//     res.redirect("/login")
-// })
+sessionRouter.post("/singup", async (req, res) => {
+    //const user = req.body
+    const user = {
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        age: req.body.age,
+        email: req.body.email,
+        password: createHash(req.body.password)
+    }
 
-sessionRouter.post("/singup", passport.authenticate("register", { failureRedirect: "/failRegister" }), async (req, res) => {
+    if (!user.last_name || !user.age || !user.email || !user.last_name || !user.password) {
+        CustomError.createError({
+            name: "user creation error",
+            cause: generateUserErrorInfo(user),
+            message: "Error trying to create user",
+            code: EErrors.INVALID_TYPES_ERROR
+        })
+    }
+    user.password = createHash(req.body.password)
+    await UserModel.create(user)
+
     res.redirect("/login")
 })
+
+// sessionRouter.post("/singup", passport.authenticate("register", { failureRedirect: "/failRegister" }), async (req, res) => {
+//     res.redirect("/login")
+// })
 
 // sessionRouter.post("/login", async (req, res) => {
 //     const { email, password } = req.body
